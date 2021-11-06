@@ -3,11 +3,16 @@ package org.github.abarhub.taptempojava;
 import org.apache.commons.cli.*;
 
 import java.text.DecimalFormat;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Scanner;
 
 public class TapTempo {
+
+    private static Clock clock = Clock.systemUTC();
 
     record Parameter(int precision, int resetTime, int sampleSize) {
     }
@@ -108,20 +113,28 @@ public class TapTempo {
         return new Parameter(precision, resetTime, sampleSize);
     }
 
-    private static double computeBPM(long currentTime, long lastTime, int occurenceCount) {
+    public static double computeBPM(Instant currentTime, Instant lastTime, int occurenceCount) {
         if (occurenceCount == 0) {
             occurenceCount = 1;
         }
 
-        double elapsedTime = currentTime - lastTime;
-        var meanTime = elapsedTime / occurenceCount;
+        Duration elapsedTime = Duration.between(lastTime, currentTime);
+        var meanTime = elapsedTime.dividedBy(occurenceCount);
 
-        return 60.0 * 1000 / meanTime;
+        return 60.0 * 1000 / meanTime.toMillis();
+    }
+
+    public static boolean compareDiff(Instant lastTime, Instant currentTime, long resetTime) {
+        return Duration.between(lastTime, currentTime).compareTo(Duration.ofSeconds(resetTime)) > 0;
+    }
+
+    public static void setClock(Clock clock) {
+        TapTempo.clock = clock;
     }
 
     public static void run(String[] args) {
 
-        Deque<Long> hitTimePoints = new ArrayDeque<>();
+        Deque<Instant> hitTimePoints = new ArrayDeque<>();
         var parameter = parserArguments(args);
 
         var df = new DecimalFormat();
@@ -153,10 +166,11 @@ public class TapTempo {
                 System.out.println("""
                         Bye Bye!""");
             } else {
-                var currentTime = System.currentTimeMillis();
+                var currentTime = Instant.now(clock);
+
 
                 // Reset if the hit diff is too big.
-                if (!hitTimePoints.isEmpty() && currentTime - hitTimePoints.getLast() > parameter.resetTime * 1000L) {
+                if (!hitTimePoints.isEmpty() && compareDiff(hitTimePoints.getLast(), currentTime, parameter.resetTime)) {
                     // Clear the history.
                     hitTimePoints.clear();
                 }
@@ -181,7 +195,7 @@ public class TapTempo {
     public static void main(String[] args) throws Exception {
         try {
             run(args);
-        }catch(ExitException e){
+        } catch (ExitException e) {
             System.exit(e.exitCode);
         }
     }
