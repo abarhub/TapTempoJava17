@@ -108,17 +108,16 @@ class TapTempoTest {
         String result = baos.toString();
         var listResult = split(result);
         Assertions.assertAll(
-                () -> assertEquals(10, listResult.size()),
+                () -> assertEquals(9, listResult.size()),
                 () -> assertEquals("Hit enter key for each beat (q to quit).", listResult.get(0), "get(0)"),
-                () -> assertEquals("", listResult.get(1), "get(1)"),
-                () -> assertEquals("[Hit enter key one more time to start bpm computation...]", listResult.get(2), "get(2)"),
+                () -> assertEquals("[Hit enter key one more time to start bpm computation...]", listResult.get(1), "get(1)"),
+                () -> assertTrue(listResult.get(2).startsWith("Tempo: "), "get(2)"),
                 () -> assertTrue(listResult.get(3).startsWith("Tempo: "), "get(3)"),
                 () -> assertTrue(listResult.get(4).startsWith("Tempo: "), "get(4)"),
                 () -> assertTrue(listResult.get(5).startsWith("Tempo: "), "get(5)"),
                 () -> assertTrue(listResult.get(6).startsWith("Tempo: "), "get(6)"),
                 () -> assertTrue(listResult.get(7).startsWith("Tempo: "), "get(7)"),
-                () -> assertTrue(listResult.get(8).startsWith("Tempo: "), "get(8)"),
-                () -> assertEquals("Bye Bye!", listResult.get(9), "get(9)")
+                () -> assertEquals("Bye Bye!", listResult.get(8), "get(8)")
         );
     }
 

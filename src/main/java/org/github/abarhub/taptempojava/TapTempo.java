@@ -33,7 +33,7 @@ public class TapTempo {
         var precisionMax = 5;
         var resetTime = 5;
         var sampleSize = 5;
-        Options options = new Options();
+        var options = new Options();
 
         var optHelp = new Option("h", "help", false,
                 "Display this help message.");
@@ -129,8 +129,7 @@ public class TapTempo {
         df.setMinimumFractionDigits(parameter.precision);
 
         System.out.println("""
-                Hit enter key for each beat (q to quit).
-                """);
+                Hit enter key for each beat (q to quit).""");
 
         var keyboard = new Scanner(System.in);
         keyboard.useDelimiter("");
@@ -152,8 +151,7 @@ public class TapTempo {
             if (action == Action.END) {
                 shouldContinue = false;
                 System.out.println("""
-                        Bye Bye!
-                        """);
+                        Bye Bye!""");
             } else {
                 var currentTime = System.currentTimeMillis();
 
@@ -165,7 +163,7 @@ public class TapTempo {
 
                 hitTimePoints.add(currentTime);
                 if (hitTimePoints.size() > 1) {
-                    double bpm = computeBPM(hitTimePoints.getLast(), hitTimePoints.getFirst(), hitTimePoints.size() - 1);
+                    var bpm = computeBPM(hitTimePoints.getLast(), hitTimePoints.getFirst(), hitTimePoints.size() - 1);
 
                     String bpmRepresentation = df.format(bpm);
                     System.out.printf("Tempo: %s bpm%n", bpmRepresentation);
@@ -181,7 +179,11 @@ public class TapTempo {
     }
 
     public static void main(String[] args) throws Exception {
-        run(args);
+        try {
+            run(args);
+        }catch(ExitException e){
+            System.exit(e.exitCode);
+        }
     }
 
 }
