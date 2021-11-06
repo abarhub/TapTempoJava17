@@ -16,34 +16,55 @@ public class TapTempo {
         END, CALCULATE, OTHER
     }
 
+    static class ExitException extends RuntimeException {
+        private final int exitCode;
+
+        public ExitException(int exitCode) {
+            this.exitCode = exitCode;
+        }
+
+        public int getExitCode() {
+            return exitCode;
+        }
+    }
+
     private static Parameter parserArguments(String[] args) {
-        int precision = 0;
-        int resetTime = 5;
-        int sampleSize = 5;
+        var precision = 0;
+        var precisionMax = 5;
+        var resetTime = 5;
+        var sampleSize = 5;
         Options options = new Options();
 
-        Option optHelp = new Option("h", "help", false, "Display this help message.");
+        var optHelp = new Option("h", "help", false,
+                "Display this help message.");
         optHelp.setRequired(false);
         options.addOption(optHelp);
 
-        Option optPrecision = new Option("p", "precision", true, "Set the decimal precision of the tempo display. Default is 0 digits, max is 5 digits.");
+        var optPrecision = new Option("p", "precision", true, """
+                Set the decimal precision of the tempo display. \
+                Default is %d digits, max is %d digits.""".formatted(precision, precisionMax));
         optPrecision.setRequired(false);
         options.addOption(optPrecision);
 
-        Option optResetTime = new Option("r", "reset-time", true, "Set the time in second to reset the computation. Default is 5 seconds.");
+        var optResetTime = new Option("r", "reset-time", true, """
+                Set the time in second to reset the computation. \
+                Default is %d seconds.""".formatted(resetTime));
         optResetTime.setRequired(false);
         options.addOption(optResetTime);
 
-        Option optSampleSize = new Option("s", "sample-size", true, "Set the number of samples needed to compute the tempo. Default is 5 samples.");
+        var optSampleSize = new Option("s", "sample-size", true, """
+                Set the number of samples needed to compute the tempo. \
+                Default is %d samples.""".formatted(sampleSize));
         optSampleSize.setRequired(false);
         options.addOption(optSampleSize);
 
-        Option optVersion = new Option("v", "version", false, "Display the version.");
+        var optVersion = new Option("v", "version", false,
+                "Display the version.");
         optVersion.setRequired(false);
         options.addOption(optVersion);
 
-        CommandLineParser parser = new DefaultParser();
-        HelpFormatter formatter = new HelpFormatter();
+        var parser = new DefaultParser();
+        var formatter = new HelpFormatter();
         CommandLine cmd = null;
 
         try {
@@ -52,8 +73,8 @@ public class TapTempo {
                 precision = Integer.parseInt(cmd.getOptionValue('p'));
                 if (precision < 0) {
                     precision = 0;
-                } else if (precision > 5) {
-                    precision = 5;
+                } else if (precision > precisionMax) {
+                    precision = precisionMax;
                 }
             }
             if (cmd.hasOption('r')) {
@@ -68,10 +89,10 @@ public class TapTempo {
                     sampleSize = 1;
                 }
             }
-        } catch (ParseException e) {
+        } catch (NumberFormatException | ParseException e) {
             System.out.println(e.getClass() + ": " + e.getMessage());
             formatter.printHelp("TempoTap", options);
-            System.exit(1);
+            throw new ExitException(1);
         }
 
         if (cmd.hasOption('h') || cmd.hasOption('v')) {
@@ -81,7 +102,7 @@ public class TapTempo {
             if (cmd.hasOption('v')) {
                 System.out.println("Version: 1.0.0");
             }
-            System.exit(0);
+            throw new ExitException(0);
         }
 
         return new Parameter(precision, resetTime, sampleSize);
@@ -93,17 +114,17 @@ public class TapTempo {
         }
 
         double elapsedTime = currentTime - lastTime;
-        double meanTime = elapsedTime / occurenceCount;
+        var meanTime = elapsedTime / occurenceCount;
 
         return 60.0 * 1000 / meanTime;
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void run(String[] args) {
 
         Deque<Long> hitTimePoints = new ArrayDeque<>();
-        Parameter parameter = parserArguments(args);
+        var parameter = parserArguments(args);
 
-        DecimalFormat df = new DecimalFormat();
+        var df = new DecimalFormat();
         df.setMaximumFractionDigits(parameter.precision);
         df.setMinimumFractionDigits(parameter.precision);
 
@@ -111,7 +132,7 @@ public class TapTempo {
                 Hit enter key for each beat (q to quit).
                 """);
 
-        Scanner keyboard = new Scanner(System.in);
+        var keyboard = new Scanner(System.in);
         keyboard.useDelimiter("");
 
         boolean shouldContinue = true;
@@ -134,7 +155,7 @@ public class TapTempo {
                         Bye Bye!
                         """);
             } else {
-                long currentTime = System.currentTimeMillis();
+                var currentTime = System.currentTimeMillis();
 
                 // Reset if the hit diff is too big.
                 if (!hitTimePoints.isEmpty() && currentTime - hitTimePoints.getLast() > parameter.resetTime * 1000L) {
@@ -147,7 +168,7 @@ public class TapTempo {
                     double bpm = computeBPM(hitTimePoints.getLast(), hitTimePoints.getFirst(), hitTimePoints.size() - 1);
 
                     String bpmRepresentation = df.format(bpm);
-                    System.out.println("Tempo: " + bpmRepresentation + " bpm");
+                    System.out.printf("Tempo: %s bpm%n", bpmRepresentation);
                 } else {
                     System.out.println("[Hit enter key one more time to start bpm computation...]");
                 }
@@ -159,5 +180,8 @@ public class TapTempo {
         }
     }
 
+    public static void main(String[] args) throws Exception {
+        run(args);
+    }
 
 }
