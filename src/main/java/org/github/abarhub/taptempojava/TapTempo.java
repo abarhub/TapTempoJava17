@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.ResourceBundle;
 import java.util.Scanner;
 
 public class TapTempo {
@@ -33,7 +34,7 @@ public class TapTempo {
         }
     }
 
-    private static Parameter parserArguments(String[] args) {
+    private static Parameter parserArguments(String[] args, ResourceBundle messages) {
         var precision = 0;
         var precisionMax = 5;
         var resetTime = 5;
@@ -41,30 +42,27 @@ public class TapTempo {
         var options = new Options();
 
         var optHelp = new Option("h", "help", false,
-                "Display this help message.");
+                messages.getString("cliHelp"));
         optHelp.setRequired(false);
         options.addOption(optHelp);
 
-        var optPrecision = new Option("p", "precision", true, """
-                Set the decimal precision of the tempo display. \
-                Default is %d digits, max is %d digits.""".formatted(precision, precisionMax));
+        var optPrecision = new Option("p", "precision", true,
+                messages.getString("cliPrecision").formatted(precision, precisionMax));
         optPrecision.setRequired(false);
         options.addOption(optPrecision);
 
-        var optResetTime = new Option("r", "reset-time", true, """
-                Set the time in second to reset the computation. \
-                Default is %d seconds.""".formatted(resetTime));
+        var optResetTime = new Option("r", "reset-time", true,
+                messages.getString("cliReset").formatted(resetTime));
         optResetTime.setRequired(false);
         options.addOption(optResetTime);
 
-        var optSampleSize = new Option("s", "sample-size", true, """
-                Set the number of samples needed to compute the tempo. \
-                Default is %d samples.""".formatted(sampleSize));
+        var optSampleSize = new Option("s", "sample-size", true,
+                messages.getString("cliNbSample").formatted(sampleSize));
         optSampleSize.setRequired(false);
         options.addOption(optSampleSize);
 
         var optVersion = new Option("v", "version", false,
-                "Display the version.");
+                messages.getString("cliVersion"));
         optVersion.setRequired(false);
         options.addOption(optVersion);
 
@@ -105,7 +103,7 @@ public class TapTempo {
                 formatter.printHelp("TempoTap", options);
             }
             if (cmd.hasOption('v')) {
-                System.out.println("Version: " + Version.getVersion());
+                System.out.printf((messages.getString("version")), Version.getVersion());
             }
             throw new ExitException(0);
         }
@@ -134,15 +132,15 @@ public class TapTempo {
 
     public static void run(String[] args) {
 
+        ResourceBundle messages = ResourceBundle.getBundle("Message");
         Deque<Instant> hitTimePoints = new ArrayDeque<>();
-        var parameter = parserArguments(args);
+        var parameter = parserArguments(args, messages);
 
         var df = new DecimalFormat();
         df.setMaximumFractionDigits(parameter.precision);
         df.setMinimumFractionDigits(parameter.precision);
 
-        System.out.println("""
-                Hit enter key for each beat (q to quit).""");
+        System.out.println(messages.getString("start"));
 
         var keyboard = new Scanner(System.in);
         keyboard.useDelimiter("");
@@ -163,8 +161,7 @@ public class TapTempo {
 
             if (action == Action.END) {
                 shouldContinue = false;
-                System.out.println("""
-                        Bye Bye!""");
+                System.out.println(messages.getString("quit"));
             } else {
                 var currentTime = Instant.now(clock);
 
@@ -180,9 +177,9 @@ public class TapTempo {
                     var bpm = computeBPM(hitTimePoints.getLast(), hitTimePoints.getFirst(), hitTimePoints.size() - 1);
 
                     String bpmRepresentation = df.format(bpm);
-                    System.out.printf("Tempo: %s bpm%n", bpmRepresentation);
+                    System.out.printf(messages.getString("tempo"), bpmRepresentation);
                 } else {
-                    System.out.println("[Hit enter key one more time to start bpm computation...]");
+                    System.out.println(messages.getString("hitEnter"));
                 }
 
                 while (hitTimePoints.size() > parameter.sampleSize) {

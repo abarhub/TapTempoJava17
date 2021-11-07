@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,9 +23,12 @@ class TapTempoTest {
     private ByteArrayOutputStream baos;
     private PrintStream ps;
     private PrintStream old;
+    private Locale defaultLocale;
 
     @BeforeEach
     void setUp() {
+        defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.ENGLISH);
         baos = new ByteArrayOutputStream();
         ps = new PrintStream(baos);
         old = System.out;
@@ -36,6 +40,7 @@ class TapTempoTest {
     void tearDown() {
         System.setOut(old);
         TapTempo.setClock(Clock.systemUTC());
+        Locale.setDefault(defaultLocale);
     }
 
     @Test
@@ -58,7 +63,7 @@ class TapTempoTest {
                  -s,--sample-size <arg>   Set the number of samples needed to compute the
                                           tempo. Default is 5 samples.
                  -v,--version             Display the version.
-                """), split(result));
+                """), split(result), () -> "result=" + result);
     }
 
     @Test
@@ -113,7 +118,9 @@ class TapTempoTest {
         // Assert
         String result = baos.toString();
         var listResult = split(result);
+        System.err.println("listResult=" + listResult);
         Assertions.assertAll(
+                "listResult=" + listResult,
                 () -> assertEquals(9, listResult.size()),
                 () -> assertEquals("Hit enter key for each beat (q to quit).", listResult.get(0), "get(0)"),
                 () -> assertEquals("[Hit enter key one more time to start bpm computation...]", listResult.get(1), "get(1)"),

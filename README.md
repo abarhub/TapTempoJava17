@@ -38,8 +38,14 @@ Tempo: 372 bpm
 
 q
 Bye Bye!
-
 ```
+
+There are two languages : english and french. To force a language, use parameter `-Duser.langage` :
+```shell
+$ java -Duser.language=fr -jar taptempojava-1.0.0.jar
+```
+Valid langage are `fr` for french and `en` for english.
+
 
 help :
 ```shell
@@ -53,10 +59,11 @@ usage: TempoTap
  -s,--sample-size <arg>   Set the number of samples needed to compute the
                           tempo. Default is 5 samples.
  -v,--version             Display the version.
-
 ```
 
-Inspired by :
+Work on Windows, Linux and MacOS.
+
+## Inspired by :
 * [TapTempo in C](https://linuxfr.org/users/mzf/journaux/un-tap-tempo-en-ligne-de-commande)
 * [List of TapTempo program](https://linuxfr.org/tags/taptempo/public)
 
