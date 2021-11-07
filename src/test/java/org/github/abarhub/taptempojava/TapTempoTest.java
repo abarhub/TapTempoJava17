@@ -77,7 +77,7 @@ class TapTempoTest {
         assertEquals(0, exception.getExitCode());
         String result = baos.toString();
         assertIterableEquals(split("""
-                Version: 1.0.0"""), split(result));
+                Version: 1.0.0-SNAPSHOT"""), split(result));
     }
 
     @Test
