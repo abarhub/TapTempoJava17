@@ -105,7 +105,7 @@ public class TapTempo {
                 formatter.printHelp("TempoTap", options);
             }
             if (cmd.hasOption('v')) {
-                System.out.println("Version: 1.0.0");
+                System.out.println("Version: " + Version.getVersion());
             }
             throw new ExitException(0);
         }

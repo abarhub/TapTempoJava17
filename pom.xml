@@ -58,6 +58,9 @@
                                     <mainClass>
                                         org.github.abarhub.taptempojava.TapTempo
                                     </mainClass>
+                                    <addDefaultImplementationEntries>
+                                        true
+                                    </addDefaultImplementationEntries>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
