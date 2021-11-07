@@ -5,15 +5,12 @@ import org.apache.commons.cli.*;
 import java.text.DecimalFormat;
 import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.ResourceBundle;
 import java.util.Scanner;
 
 public class TapTempo {
-
-    private static Clock clock = Clock.systemUTC();
 
     record Parameter(int precision, int resetTime, int sampleSize) {
     }
@@ -111,29 +108,25 @@ public class TapTempo {
         return new Parameter(precision, resetTime, sampleSize);
     }
 
-    public static double computeBPM(Instant currentTime, Instant lastTime, int occurenceCount) {
+    public static double computeBPM(long currentTime, long lastTime, int occurenceCount) {
         if (occurenceCount == 0) {
             occurenceCount = 1;
         }
 
-        Duration elapsedTime = Duration.between(lastTime, currentTime);
-        var meanTime = elapsedTime.dividedBy(occurenceCount);
+        var elapsedTime = currentTime - lastTime;
+        var meanTime = elapsedTime / (occurenceCount);
 
-        return 60.0 * 1000 / meanTime.toMillis();
+        return 60.0 * 1000_000_000 / meanTime;
     }
 
-    public static boolean compareDiff(Instant lastTime, Instant currentTime, long resetTime) {
-        return Duration.between(lastTime, currentTime).compareTo(Duration.ofSeconds(resetTime)) > 0;
-    }
-
-    public static void setClock(Clock clock) {
-        TapTempo.clock = clock;
+    public static boolean compareDiff(long lastTime, long currentTime, long resetTime) {
+        return currentTime - lastTime > Duration.ofSeconds(resetTime).toNanos();
     }
 
     public static void run(String[] args) {
 
         ResourceBundle messages = ResourceBundle.getBundle("Message");
-        Deque<Instant> hitTimePoints = new ArrayDeque<>();
+        Deque<Long> hitTimePoints = new ArrayDeque<>();
         var parameter = parserArguments(args, messages);
 
         var df = new DecimalFormat();
@@ -163,8 +156,7 @@ public class TapTempo {
                 shouldContinue = false;
                 System.out.println(messages.getString("quit"));
             } else {
-                var currentTime = Instant.now(clock);
-
+                var currentTime = System.nanoTime();
 
                 // Reset if the hit diff is too big.
                 if (!hitTimePoints.isEmpty() && compareDiff(hitTimePoints.getLast(), currentTime, parameter.resetTime)) {
